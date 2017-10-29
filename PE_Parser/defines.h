@@ -5,10 +5,10 @@
 			CloseHandle(hFile);\
 		if(hMapping)\
 			CloseHandle(hMapping);\
-		if(inceputFisier)\
-			UnmapViewOfFile(inceputFisier);\
+		if(fileBegin)\
+			UnmapViewOfFile(fileBegin);\
 		printf("%s\n",s);\
-		return 1;\
+		exit(1);\
 	}
 
 #define MAP(tipRezultat, adresa, errorString, variabilaRezultat)	{\
@@ -16,25 +16,6 @@
 				ABORT(errorString);\
 			(variabilaRezultat) = (tipRezultat)((adresa) + inceputFisier);\
 		}
-
-char *characteristics[16] = {
-	"Relocation info stripped from file.",
-	"File is executable  (i.e. no unresolved externel references).",
-	"Line nunbers stripped from file.",
-	"Local symbols stripped from file.",
-	"Agressively trim working set",
-	"App can handle >2gb addresses",
-	"Bytes of machine word are reversed.",
-	"????????",
-	"32 bit word machine.",
-	"Debugging info stripped from file in .DBG file",
-	"If Image is on removable media, copy and run from the swap file.",
-	"If Image is on Net, copy and run from the swap file.",
-	"System File.",
-	"File is a DLL.",
-	"File should only be run on a UP machine"
-	"Bytes of machine word are reversed."
-};
 
 /*
 char *caracteristiciSctiuni[]={

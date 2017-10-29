@@ -7,9 +7,17 @@
 
 #include "targetver.h"
 
+#include <iostream>
+#include <string>
 #include <stdio.h>
+#include <vector>
 #include <tchar.h>
+#include <stdio.h>
+#include <windows.h>
+#include <winnt.h>
+#include <Dbghelp.h>
+#include <stdexcept>
 
-
-
-// TODO: reference additional headers your program requires here
+#include "defines.h"
+#include "BaseParser.h"
+#include "PE_parser.h"
