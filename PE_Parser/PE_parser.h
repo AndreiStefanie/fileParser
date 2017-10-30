@@ -1,5 +1,6 @@
 #pragma once
 #include "stdafx.h"
+#define DISPLAY_LIMIT 30
 
 class PE_parser : public BaseParser
 {
@@ -34,5 +35,5 @@ private:
 	void printMachine(std::ostream& stream = std::cout);
 	void printExports(std::ostream& stream = std::cout);
 	void printImports(std::ostream& stream = std::cout);
-	int rva2Offset(unsigned int rva);
+	DWORD rva2Offset(unsigned int rva);
 };

@@ -24,5 +24,5 @@ int main(int argc, char* argv[])
 	{
 		std::cout << e.what();
 	}
-	getchar();
+	//getchar();
 }

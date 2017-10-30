@@ -44,9 +44,7 @@ void PE_parser::openFile(std::string & filePath)
 	if (pHeader->Signature != IMAGE_NT_SIGNATURE)
 		throw std::invalid_argument("PE signature missing.");
 
-	sections = (PIMAGE_SECTION_HEADER)
-		((BYTE*)pHeader + sizeof(IMAGE_NT_HEADERS) +
-		(pHeader->FileHeader.NumberOfSections - 1) * sizeof(IMAGE_SECTION_HEADER));
+	sections = IMAGE_FIRST_SECTION(pHeader);
 }
 
 void PE_parser::printCharacteristics(std::ostream& stream)
@@ -69,7 +67,8 @@ void PE_parser::printHeaderInfo(std::ostream& stream)
 	PE_parser::printMachine(stream);
 	PE_parser::printCharacteristics(stream);
 	PE_parser::printExports(stream);
-	PE_parser::printImports(stream);
+	//PE_parser::printImports(stream);
+	//DumpExportsSection((DWORD)fileBegin, pHeader);
 }
 
 void PE_parser::printMachine(std::ostream& stream)
@@ -103,17 +102,23 @@ void PE_parser::printExports(std::ostream& stream)
 
 	expDescriptor = (PIMAGE_EXPORT_DIRECTORY)(fileBegin + rva2Offset(pHeader->
 		OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress));
-	name_table = (PDWORD *)((int)fileBegin + rva2Offset(expDescriptor->AddressOfNames));
+	name_table = (PDWORD *)(fileBegin + rva2Offset(expDescriptor->AddressOfNames));
 
 	printTabs(1, stream);
 	stream << "Exports:" << std::endl;
 	printTabs(2, stream);
 	stream << "Names (" << expDescriptor->NumberOfNames << "): " << std::endl;
-	/*for (unsigned int i = 0; i < expDescriptor->NumberOfNames; i++)
+	for (unsigned int i = 0; i < expDescriptor->NumberOfNames; i++)
 	{
 		printTabs(3, stream);
-		stream << (BYTE *)fileBegin + (int)name_table[i] << std::endl;
-	}*/
+		stream << (BYTE *)(fileBegin + rva2Offset((unsigned int)name_table[i])) << std::endl;
+		if (i == DISPLAY_LIMIT)
+		{
+			printTabs(3, stream);
+			stream << "... " << expDescriptor->NumberOfNames - DISPLAY_LIMIT << " more" << std::endl;
+			break;
+		}
+	}
 }
 
 void PE_parser::printImports(std::ostream& stream)
@@ -121,7 +126,9 @@ void PE_parser::printImports(std::ostream& stream)
 	if (pHeader->OptionalHeader.NumberOfRvaAndSizes < 2)
 		return;
 
-	PIMAGE_IMPORT_DESCRIPTOR impDescriptor = (PIMAGE_IMPORT_DESCRIPTOR)(fileBegin + rva2Offset(
+	PIMAGE_IMPORT_DESCRIPTOR impDescriptor;
+
+	impDescriptor = (PIMAGE_IMPORT_DESCRIPTOR)(fileBegin + rva2Offset(
 		pHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress));
 
 	printTabs(1, stream);
@@ -137,12 +144,13 @@ void PE_parser::printImports(std::ostream& stream)
 	//}
 }
 
-int PE_parser::rva2Offset(unsigned int rva)
+DWORD PE_parser::rva2Offset(unsigned int rva)
 {
 	for (int i = 0; i < pHeader->FileHeader.NumberOfSections; i++) 
 	{
-		if (rva >= sections[i].VirtualAddress && rva < sections[i].VirtualAddress + sections[i].Misc.VirtualSize)
-			return sections[i].PointerToRawData + (rva - sections[i].VirtualAddress);
+		if ((rva >= sections[i].VirtualAddress) && 
+			(rva < sections[i].VirtualAddress + sections[i].Misc.VirtualSize))
+			return sections[i].PointerToRawData + rva - sections[i].VirtualAddress;
 	}
 
 	return -1;
