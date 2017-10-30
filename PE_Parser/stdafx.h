@@ -17,6 +17,7 @@
 #include <winnt.h>
 #include <Dbghelp.h>
 #include <stdexcept>
+#include <memory>
 
 #include "defines.h"
 #include "BaseParser.h"

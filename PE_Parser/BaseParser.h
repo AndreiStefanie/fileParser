@@ -7,6 +7,7 @@ public:
 	BaseParser() {};
 	~BaseParser() {};
 	void printTabs(unsigned int tabs = 1, std::ostream& stream = std::cout);
+	virtual void printHeaderInfo(std::ostream& stream = std::cout) = 0;
 
 private:
 

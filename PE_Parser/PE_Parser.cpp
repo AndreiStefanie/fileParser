@@ -40,7 +40,7 @@ void PE_parser::openFile(std::string & filePath)
 	if (pDos->e_magic != IMAGE_DOS_SIGNATURE)
 		throw std::invalid_argument("MSDOS signature missing.");
 
-	pHeader = (PIMAGE_NT_HEADERS)(pDos->e_lfanew + fileBegin);
+	pHeader = (PIMAGE_NT_HEADERS)(fileBegin + pDos->e_lfanew);
 	if (pHeader->Signature != IMAGE_NT_SIGNATURE)
 		throw std::invalid_argument("PE signature missing.");
 
@@ -69,6 +69,7 @@ void PE_parser::printHeaderInfo(std::ostream& stream)
 	PE_parser::printMachine(stream);
 	PE_parser::printCharacteristics(stream);
 	PE_parser::printExports(stream);
+	PE_parser::printImports(stream);
 }
 
 void PE_parser::printMachine(std::ostream& stream)
@@ -100,7 +101,7 @@ void PE_parser::printExports(std::ostream& stream)
 	PIMAGE_EXPORT_DIRECTORY expDescriptor;
 	PDWORD *name_table;
 
-	expDescriptor = (PIMAGE_EXPORT_DIRECTORY)((BYTE *)fileBegin + rva2Offset(pHeader->
+	expDescriptor = (PIMAGE_EXPORT_DIRECTORY)(fileBegin + rva2Offset(pHeader->
 		OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress));
 	name_table = (PDWORD *)((int)fileBegin + rva2Offset(expDescriptor->AddressOfNames));
 
@@ -120,10 +121,12 @@ void PE_parser::printImports(std::ostream& stream)
 	if (pHeader->OptionalHeader.NumberOfRvaAndSizes < 2)
 		return;
 
-	printf("\n");
-	IMAGE_DATA_DIRECTORY imports = pHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT];
-	printTabs(2);
-	printf("Imports (%d):\n", imports.Size);
+	PIMAGE_IMPORT_DESCRIPTOR impDescriptor = (PIMAGE_IMPORT_DESCRIPTOR)(fileBegin + rva2Offset(
+		pHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress));
+
+	printTabs(1, stream);
+	stream << "Imports:" << std::endl;
+	printTabs(2, stream);
 	//PIMAGE_IMPORT_DESCRIPTOR impDescriptor = (PIMAGE_IMPORT_DESCRIPTOR)
 	//(pHeader->OptionalHeader.ImageBase + imports.VirtualAddress);
 	//for (int i = 0; i < impDescriptor->FirstThunk; i++)
@@ -138,10 +141,8 @@ int PE_parser::rva2Offset(unsigned int rva)
 {
 	for (int i = 0; i < pHeader->FileHeader.NumberOfSections; i++) 
 	{
-		unsigned int currentLoc = sections[i].VirtualAddress + sections[i].SizeOfRawData;
-
-		if (currentLoc >= rva)
-			return sections[i].PointerToRawData + (rva + sections[i].SizeOfRawData) - currentLoc;
+		if (rva >= sections[i].VirtualAddress && rva < sections[i].VirtualAddress + sections[i].Misc.VirtualSize)
+			return sections[i].PointerToRawData + (rva - sections[i].VirtualAddress);
 	}
 
 	return -1;

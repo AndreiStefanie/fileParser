@@ -17,11 +17,12 @@ int main(int argc, char* argv[])
 
 	try
 	{
-		PE_parser peParser(filePath);
-		peParser.printHeaderInfo();
+		std::unique_ptr<BaseParser> parser = std::make_unique<PE_parser>(filePath);
+		parser->printHeaderInfo();
 	}
 	catch (const std::exception& e)
 	{
 		std::cout << e.what();
 	}
+	getchar();
 }
